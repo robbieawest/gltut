@@ -99,8 +99,7 @@ public:
 		glc(glUseProgram(0));
 	}
 
-	void uniform4f(std::string uniform_id, float f1, float f2, float f3, float f4) {
-		
+	void cache_uniform(std::string uniform_id) {
 		if (uniform_cache.find(uniform_id) == uniform_cache.end()) {
 			//Not cached
 			const char* uniform_id_cstr = uniform_id.c_str();
@@ -112,7 +111,30 @@ public:
 
 			uniform_cache.insert({ uniform_id, uniform_location });
 		}
+	}
+
+
+	void uniform4f(std::string uniform_id, float f1, float f2, float f3, float f4) {
+		cache_uniform(uniform_id);
 
 		glc(glUniform4f(uniform_cache[uniform_id], f1, f2, f3, f4));
+	}
+
+	void uniform3f(std::string uniform_id, float f1, float f2, float f3) {
+		cache_uniform(uniform_id);
+
+		glc(glUniform3f(uniform_cache[uniform_id], f1, f2, f3));
+	}
+
+	void uniform1i(std::string uniform_id, float i) {
+		cache_uniform(uniform_id);
+
+		glc(glUniform1i(uniform_cache[uniform_id], i));
+	}
+
+	void uniformMatrix4f(std::string uniform_id, glm::mat4 mat) {
+		cache_uniform(uniform_id);
+
+		glc(glUniformMatrix4fv(uniform_cache[uniform_id], 1, false, glm::value_ptr(mat)));
 	}
 };

@@ -1,8 +1,9 @@
 #version 410 core
 
-out vec4 outcol;
-in vec3 col;
+out vec4 FragColour;
+uniform vec3 objectColour;
+uniform vec3 lightColour;
 
 void main() {
-	outcol = vec4(col, 1.0);
+	FragColour = vec4(objectColour * lightColour, 1.0);
 }
