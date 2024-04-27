@@ -313,6 +313,7 @@ void mainLoop() {
 	shaderProgram.model(model, true);
 	shaderProgram.view(view);
 	shaderProgram.project(projection);
+	shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
 	glm::vec3 light_position(1.2f, 1.0f, 1.0f);
@@ -356,6 +357,7 @@ void mainLoop() {
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		shaderProgram.view(view);
 		shaderProgram.uniform3f("lightPos", light_position.x, light_position.y, light_position.z);
+		shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
 		
 		glc(glBindVertexArray(VAO));
 		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
