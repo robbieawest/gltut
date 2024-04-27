@@ -190,8 +190,8 @@ void mainLoop() {
 		-0.5f,  0.5f,  0.5f,
 		-0.5f,  0.5f, -0.5f,
 	};
-
-	float vertices[8 * 3] = {
+		
+	float verticesbad[8 * 3] = {
 		0.5f, 0.5f, 0.5f, //back face (into screen)
 		0.5f, -0.5f, 0.5f,
 		-0.5f, -0.5f, 0.5f,
@@ -201,6 +201,50 @@ void mainLoop() {
 		0.5f, -0.5f, -0.5f,
 		-0.5f, -0.5f, -0.5f,
 		-0.5f, 0.5f, -0.5f
+	};
+
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
 
 	unsigned int indices[] = {
@@ -227,34 +271,37 @@ void mainLoop() {
 	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
-	unsigned int EBO;
-	glc(glGenBuffers(1, &EBO));
-	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
-	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
+//	unsigned int EBO;
+//	glc(glGenBuffers(1, &EBO));
+//	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+//	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
 	
 	//Link vertex attributes
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0));
 	glc(glEnableVertexAttribArray(0));
+	glc(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))));
+	glc(glEnableVertexAttribArray(1));
+
 
 	//Light source
 	unsigned int LVAO;
 	glc(glGenVertexArrays(1, &LVAO));
 	glc(glBindVertexArray(LVAO));
 	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+//	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
 	
 	//Link vertex attributes
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0));
 	glc(glEnableVertexAttribArray(0));
-
-
 
 	//Shader
 	Shader shaderProgram = Shader::parse("vertex", "fragment");
+	shaderProgram.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 	shaderProgram.uniform3f("objectColour", 1.0f, 0.5f, -0.31f);
 	shaderProgram.uniform3f("lightColour", 1.0f, 1.0f, 1.0f);
 
-	Shader lightShader = Shader::parse("vertex", "lightFragment");
+	Shader lightShader = Shader::parse("lightVertex", "lightFragment");
+	lightShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
 
 	//MVP for object
 	glm::mat4 model = glm::mat4(1.0f);
@@ -263,20 +310,21 @@ void mainLoop() {
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 	
 	shaderProgram.attach();
-	shaderProgram.uniformMatrix4f("m", model);
-	shaderProgram.uniformMatrix4f("v", view);
-	shaderProgram.uniformMatrix4f("p", projection);
+	shaderProgram.model(model, true);
+	shaderProgram.view(view);
+	shaderProgram.project(projection);
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
 	glm::vec3 light_position(1.2f, 1.0f, 1.0f);
+	shaderProgram.uniform3f("lightPos", 1.2f, 1.0f, 1.0f);
 	modelLight = glm::mat4(1.0f);
 	modelLight = glm::translate(modelLight, light_position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 
 	lightShader.attach();
-	lightShader.uniformMatrix4f("m", modelLight);
-	lightShader.uniformMatrix4f("v", view);
-	lightShader.uniformMatrix4f("p", projection);
+	lightShader.model(modelLight, false);
+	lightShader.view(view);
+	lightShader.project(projection);
 
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -297,27 +345,36 @@ void mainLoop() {
 		glc(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		glc(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+		//Update light position
+		light_position.x = cos(glfwGetTime());
+		light_position.y = cos(glfwGetTime() / 3.0f);
+		light_position.z = sin(glfwGetTime());
 
-		shaderProgram.attach();
-
-		//Update view matrix
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		shaderProgram.uniformMatrix4f("v", view);
 		
-		//Draw object
-		glc(glBindBuffer(GL_ARRAY_BUFFER, VAO));
-		glc(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
+		//Update and draw object
+		shaderProgram.attach();
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		shaderProgram.view(view);
+		shaderProgram.uniform3f("lightPos", light_position.x, light_position.y, light_position.z);
+		
+		glc(glBindVertexArray(VAO));
+		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+	//	glc(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
 
 		//Draw light
-		
 		lightShader.attach();
-		lightShader.uniformMatrix4f("v", view);
-		glc(glBindBuffer(GL_ARRAY_BUFFER, LVAO));
-		glc(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
-		
+		modelLight = glm::mat4(1.0f);
+		modelLight = glm::translate(modelLight, light_position);
+		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
+		lightShader.model(modelLight, false);
+		lightShader.view(view);
 
+		glc(glBindVertexArray(LVAO));
+		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+	//	glc(glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0));
+		
 		//Unbind
-		glc(glBindBuffer(GL_ARRAY_BUFFER, 0));
+		glc(glBindVertexArray(0));
 		shaderProgram.deattach();
 
 		//Events and swap buffers

@@ -10,6 +10,8 @@ class Shader {
 private:
 
 	unsigned int id = -1;
+	std::string m = "", v = "", p = "", n = "";
+	bool mvpn_def;
 	std::unordered_map<std::string, int> uniform_cache;
 
 	static std::string get_source(std::string filename) {
@@ -105,7 +107,7 @@ public:
 			const char* uniform_id_cstr = uniform_id.c_str();
 			glc(int uniform_location = glGetUniformLocation(id, uniform_id_cstr));
 			if (uniform_location == -1) {
-				spdlog::warn("uniform {} is not associated with shader", uniform_id);
+				spdlog::warn("uniform '{}' is not associated with shader", uniform_id);
 				return;
 			}
 
@@ -137,4 +139,42 @@ public:
 
 		glc(glUniformMatrix4fv(uniform_cache[uniform_id], 1, false, glm::value_ptr(mat)));
 	}
+
+	void uniformMatrix3f(std::string uniform_id, glm::mat3 mat) {
+		cache_uniform(uniform_id);
+
+		glc(glUniformMatrix3fv(uniform_cache[uniform_id], 1, false, glm::value_ptr(mat)));
+	}
+
+	void model(glm::mat4 model_mat, bool normal_mat) {
+		uniformMatrix4f(m, model_mat);
+		if (normal_mat) {
+			if (n == "")
+				spdlog::warn("normal matrix attempted to be changed when n is not set");
+			else
+				uniformMatrix3f(n, glm::mat3(glm::transpose(glm::inverse(model_mat))));
+		}
+	}
+
+	void view(glm::mat4 view_mat) {
+		uniformMatrix4f(v, view_mat);
+	}
+
+	void project(glm::mat4 project_mat) {
+		uniformMatrix4f(p, project_mat);
+	}
+	
+	void set_mvpn(std::string m, std::string v, std::string p, std::string n) {
+		cache_uniform(m);
+		cache_uniform(v);
+		cache_uniform(p);
+		this->m = m;
+		this->v = v;
+		this->p = p;
+
+		if (n == "")return;
+		cache_uniform(n);
+		this->n = n;
+	}
+	
 };

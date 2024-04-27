@@ -1,6 +1,7 @@
-
 #version 410 core
 
+in vec3 normal;
+in vec3 FragPos;
 out vec4 FragColour;
 
 void main() {
