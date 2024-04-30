@@ -11,7 +11,7 @@ private:
 
 	unsigned int id = -1;
 	std::string m = "", v = "", p = "", n = "";
-	std::string ambient, specular, diffuse, shininess;
+	std::string specular, shininess;
 	std::string lambient, lspecular, ldiffuse;
 	bool mat_uni_def = false;
 	bool light_uni_def = false;
@@ -200,28 +200,22 @@ public:
 		this->n = n;
 	}
 
-	void set_mat_uniforms(std::string amb, std::string spec, std::string diff, std::string shi) {
+	void set_mat_uniforms(std::string spec, std::string shi) {
 		mat_uni_def = true;
-		cache_uniform(amb);
 		cache_uniform(spec);
-		cache_uniform(diff);
 		cache_uniform(shi);
 
-		ambient = amb;
 		specular = spec;
-		diffuse = diff;
 		shininess = shi;
 	}
 
-	void set_material(glm::vec3 amb, glm::vec3 spec, glm::vec3 diff, float shi) {
+	void set_material(glm::vec3 spec, float shi) {
 		if (!mat_uni_def) {
 			spdlog::warn("material uniforms have not been defined.");
 			return;
 		}
 
-		uniform3f(ambient, amb.x, amb.y, amb.z);
 		uniform3f(specular, spec.x, spec.y, spec.z);
-		uniform3f(diffuse, diff.x, diff.y, diff.z);
 		uniform1f(shininess, shi);
 	}
 
