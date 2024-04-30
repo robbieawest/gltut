@@ -11,7 +11,11 @@ private:
 
 	unsigned int id = -1;
 	std::string m = "", v = "", p = "", n = "";
-	bool mvpn_def;
+	std::string ambient, specular, diffuse, shininess;
+	std::string lambient, lspecular, ldiffuse;
+	bool mat_uni_def = false;
+	bool light_uni_def = false;
+	bool mvpn_def = false;
 	std::unordered_map<std::string, int> uniform_cache;
 
 	static std::string get_source(std::string filename) {
@@ -128,10 +132,16 @@ public:
 		glc(glUniform3f(uniform_cache[uniform_id], f1, f2, f3));
 	}
 
-	void uniform1i(std::string uniform_id, float i) {
+	void uniform1i(std::string uniform_id, int i) {
 		cache_uniform(uniform_id);
 
 		glc(glUniform1i(uniform_cache[uniform_id], i));
+	}
+
+	void uniform1f(std::string uniform_id, float i) {
+		cache_uniform(uniform_id);
+
+		glc(glUniform1f(uniform_cache[uniform_id], i));
 	}
 
 	void uniformMatrix4f(std::string uniform_id, glm::mat4 mat) {
@@ -147,6 +157,10 @@ public:
 	}
 
 	void model(glm::mat4 model_mat, bool normal_mat) {
+		if (!mvpn_def) {
+			spdlog::warn("mvpn not set for model");
+			return;
+		}
 		uniformMatrix4f(m, model_mat);
 		if (normal_mat) {
 			if (n == "")
@@ -157,14 +171,23 @@ public:
 	}
 
 	void view(glm::mat4 view_mat) {
+		if (!mvpn_def) {
+			spdlog::warn("mvpn not set for model");
+			return;
+		}
 		uniformMatrix4f(v, view_mat);
 	}
 
 	void project(glm::mat4 project_mat) {
+		if (!mvpn_def) {
+			spdlog::warn("mvpn not set for model");
+			return;
+		}
 		uniformMatrix4f(p, project_mat);
 	}
 	
 	void set_mvpn(std::string m, std::string v, std::string p, std::string n) {
+		mvpn_def = true;
 		cache_uniform(m);
 		cache_uniform(v);
 		cache_uniform(p);
@@ -175,6 +198,53 @@ public:
 		if (n == "")return;
 		cache_uniform(n);
 		this->n = n;
+	}
+
+	void set_mat_uniforms(std::string amb, std::string spec, std::string diff, std::string shi) {
+		mat_uni_def = true;
+		cache_uniform(amb);
+		cache_uniform(spec);
+		cache_uniform(diff);
+		cache_uniform(shi);
+
+		ambient = amb;
+		specular = spec;
+		diffuse = diff;
+		shininess = shi;
+	}
+
+	void set_material(glm::vec3 amb, glm::vec3 spec, glm::vec3 diff, float shi) {
+		if (!mat_uni_def) {
+			spdlog::warn("material uniforms have not been defined.");
+			return;
+		}
+
+		uniform3f(ambient, amb.x, amb.y, amb.z);
+		uniform3f(specular, spec.x, spec.y, spec.z);
+		uniform3f(diffuse, diff.x, diff.y, diff.z);
+		uniform1f(shininess, shi);
+	}
+
+	void set_light_uniforms(std::string amb, std::string spec, std::string diff) {
+		light_uni_def = true;
+		cache_uniform(amb);
+		cache_uniform(spec);
+		cache_uniform(diff);
+
+		lambient = amb;
+		lspecular = spec;
+		ldiffuse = diff;
+	}
+
+	void set_light(glm::vec3 amb, glm::vec3 spec, glm::vec3 diff) {
+		if (!light_uni_def) {
+			spdlog::warn("light uniforms have not been defined.");
+			return;
+		}
+
+		uniform3f(lambient, amb.x, amb.y, amb.z);
+		uniform3f(lspecular, spec.x, spec.y, spec.z);
+		uniform3f(ldiffuse, diff.x, diff.y, diff.z);
 	}
 	
 };

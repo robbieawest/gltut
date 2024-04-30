@@ -297,8 +297,6 @@ void mainLoop() {
 	//Shader
 	Shader shaderProgram = Shader::parse("vertex", "fragment");
 	shaderProgram.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
-	shaderProgram.uniform3f("objectColour", 1.0f, 0.5f, -0.31f);
-	shaderProgram.uniform3f("lightColour", 1.0f, 1.0f, 1.0f);
 
 	Shader lightShader = Shader::parse("lightVertex", "lightFragment");
 	lightShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
@@ -314,10 +312,24 @@ void mainLoop() {
 	shaderProgram.view(view);
 	shaderProgram.project(projection);
 	shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+	shaderProgram.set_mat_uniforms("material.ambient", "material.specular", "material.diffuse", "material.shininess");
+	shaderProgram.set_material(
+		glm::vec3(1.0f, 0.5f, 0.31f),
+		glm::vec3(1.0f, 0.5f, 0.31f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		32.0f
+	);
+	shaderProgram.set_light_uniforms("light.ambient", "light.specular", "light.diffuse");
+	shaderProgram.set_light(
+		glm::vec3(0.2f, 0.2f, 0.2f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(1.0f)
+	);
+
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
 	glm::vec3 light_position(1.2f, 1.0f, 1.0f);
-	shaderProgram.uniform3f("lightPos", 1.2f, 1.0f, 1.0f);
+	shaderProgram.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
 	modelLight = glm::mat4(1.0f);
 	modelLight = glm::translate(modelLight, light_position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
@@ -356,7 +368,7 @@ void mainLoop() {
 		shaderProgram.attach();
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		shaderProgram.view(view);
-		shaderProgram.uniform3f("lightPos", light_position.x, light_position.y, light_position.z);
+		shaderProgram.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
 		shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
 		
 		glc(glBindVertexArray(VAO));
