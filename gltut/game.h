@@ -7,134 +7,23 @@
 #include "helper.h"
 #include "shader.h"
 #include "texture.h"
+#include "camera.h"
+#include "mouse.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-//Camera
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-float cameraSpeed = 5.0f;
-float deltaTime = 0.0f;
 
-bool w_key_pressed = false;
-bool s_key_pressed = false;
-bool a_key_pressed = false;
-bool d_key_pressed = false;
-bool space_pressed = false;
-bool cntrl_pressed = false;
+//Camera and mouse
+Camera cam(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f);
+Mouse mouse(0.9f, cam);
 
-void handle_movement() {
-	if (w_key_pressed) {
-		cameraPos += cameraFront * cameraSpeed * deltaTime;
-	}
-	if (s_key_pressed) {
-		cameraPos -= cameraFront * cameraSpeed * deltaTime;
-	}
-	if (a_key_pressed) {
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
-	}
-	if (d_key_pressed) {
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
-	}
-	if (space_pressed) {
-		cameraPos += glm::vec3(0.0f, 1.0f, 0.0f) * cameraSpeed * deltaTime;
-	}
-	if (cntrl_pressed) {
-		cameraPos -= glm::vec3(0.0f, 1.0f, 0.0f) * cameraSpeed * deltaTime;
-	}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	cam.key_callback(window, key, scancode, action, mods);
 }
 
-//For all inputs
-void key_callback(GLFWwindow* _, int key, int scancode, int action, int mods) {
-
-	
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		spdlog::info("ESC pressed, exiting window");
-		glfwSetWindowShouldClose(window, true);
-	}
-	if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-		spdlog::info("F key pressed, wireframes activated.");
-
-		int currentMode;
-		glc(glGetIntegerv(GL_POLYGON_MODE, &currentMode));
-
-		int newMode = currentMode == GL_FILL ? GL_LINE : GL_FILL;
-		glc(glPolygonMode(GL_FRONT_AND_BACK, newMode));
-	}
-	if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-		a_key_pressed = true;
-	}
-	else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-		a_key_pressed = false;
-	}
-	if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-		s_key_pressed = true;
-	}
-	else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-		s_key_pressed = false;
-	}
-	if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-		d_key_pressed = true;
-	}
-	else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-		d_key_pressed = false;
-	}
-	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-		w_key_pressed = true;
-	}
-	else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-		w_key_pressed = false;
-	}
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-		space_pressed = true;
-	}
-	else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
-		space_pressed = false;
-	}
-	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) {
-		cntrl_pressed = true;
-	}
-	else if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) {
-		cntrl_pressed = false;
-	}
-}
-
-double last_mouse_xpos = 0.0f;
-double last_mouse_ypos = 0.0f;
-bool first_mouse_movement = true;
-const float mouse_sensitivity = 0.9f;
-float mouse_yaw = -90.0f, mouse_pitch = 0.0f;
-
-void mouse_callback(GLFWwindow* _, double xpos, double ypos) {
-	if (first_mouse_movement) {
-		last_mouse_xpos = xpos;
-		last_mouse_ypos = ypos;
-		first_mouse_movement = false;
-		return;
-	}
-
-	double dx = xpos - last_mouse_xpos;
-	double dy = last_mouse_ypos - ypos;
-	last_mouse_xpos = xpos;
-	last_mouse_ypos = ypos;
-
-	mouse_yaw += mouse_sensitivity * 0.1 *  dx;
-	mouse_pitch += mouse_sensitivity * 0.1 * dy;
-
-	if (mouse_pitch > 89.0f)
-		mouse_pitch = 89.0f;
-	else if (mouse_pitch < -89.0f)
-		mouse_pitch = -89.0f;
-
-	glm::vec3 direction(
-		cos(glm::radians(mouse_yaw)) * cos(glm::radians(mouse_pitch)),
-		sin(glm::radians(mouse_pitch)),
-		sin(glm::radians(mouse_yaw)) * cos(glm::radians(mouse_pitch))
-	);
-
-	cameraFront = glm::normalize(direction);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	mouse.mouse_callback(window, xpos, ypos);
 }
 
 
@@ -219,6 +108,7 @@ void mainLoop() {
 	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
 	glc(glEnableVertexAttribArray(0));
 
+
 	//Shader
 	Shader shaderProgram = Shader::parse("vertex", "fragment");
 	shaderProgram.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
@@ -229,14 +119,14 @@ void mainLoop() {
 	//MVP for object
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 	
 	shaderProgram.attach();
 	shaderProgram.model(model, true);
 	shaderProgram.view(view);
 	shaderProgram.project(projection);
-	shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+	shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 	shaderProgram.set_mat_uniforms("material.specular","material.shininess");
 	shaderProgram.set_material(
 		glm::vec3(1.0f, 0.5f, 0.31f),
@@ -272,6 +162,7 @@ void mainLoop() {
 
 
 	float lastFrameTime = 0.0f;
+	float deltaTime = 0.0f;
 	//game _loop_
 	while (!glfwWindowShouldClose(window)) {
 		
@@ -279,7 +170,7 @@ void mainLoop() {
 		deltaTime = currentTime - lastFrameTime;
 		lastFrameTime = currentTime;
 
-		handle_movement();
+		cam.handle_movement(deltaTime);
 
 		//rendering
 		glc(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
@@ -294,10 +185,10 @@ void mainLoop() {
 		//Update and draw object
 		container.activate()->bind();
 		shaderProgram.attach();
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 		shaderProgram.view(view);
 		shaderProgram.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
-		shaderProgram.uniform3f("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+		shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 		
 		glc(glBindVertexArray(VAO));
 		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
