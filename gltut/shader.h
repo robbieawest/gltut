@@ -209,13 +209,12 @@ public:
 		shininess = shi;
 	}
 
-	void set_material(glm::vec3 spec, float shi) {
+	void set_material(float shi) {
 		if (!mat_uni_def) {
 			spdlog::warn("material uniforms have not been defined.");
 			return;
 		}
 
-		uniform3f(specular, spec.x, spec.y, spec.z);
 		uniform1f(shininess, shi);
 	}
 
@@ -230,7 +229,7 @@ public:
 		ldiffuse = diff;
 	}
 
-	void set_light(glm::vec3 amb, glm::vec3 spec, glm::vec3 diff) {
+	void set_light(glm::vec3 amb, glm::vec3 spec, glm::vec3 diff, float constant, float linear, float quadratic) {
 		if (!light_uni_def) {
 			spdlog::warn("light uniforms have not been defined.");
 			return;
@@ -239,6 +238,9 @@ public:
 		uniform3f(lambient, amb.x, amb.y, amb.z);
 		uniform3f(lspecular, spec.x, spec.y, spec.z);
 		uniform3f(ldiffuse, diff.x, diff.y, diff.z);
+		uniform1f("light.constant", constant);
+		uniform1f("light.linear", linear);
+		uniform1f("light.quadratic", quadratic);
 	}
 	
 };

@@ -9,9 +9,12 @@
 #include "texture.h"
 #include "camera.h"
 #include "mouse.h"
+#include "sphere.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+
+#include <random>
 
 
 //Camera and mouse
@@ -31,7 +34,7 @@ void mainLoop() {
 	assert_cond(window, "window setup check");
 
 
-	float vertices[] = {
+	float cube_vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -76,17 +79,18 @@ void mainLoop() {
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
 
-
+	
 	//Create vertex array object to bind our VBO and vertex linking to
 	unsigned int VAO;
 	glc(glGenVertexArrays(1, &VAO));
 	glc(glBindVertexArray(VAO));
+	
 
 	//Object
 	unsigned int VBO;
 	glc(glGenBuffers(1, &VBO));
 	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW));
 
 	
 	//Link vertex attributes
@@ -96,7 +100,7 @@ void mainLoop() {
 	glc(glEnableVertexAttribArray(1));
 	glc(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))))
 	glc(glEnableVertexAttribArray(2));
-
+	
 
 	//Light source
 	unsigned int LVAO;
@@ -108,13 +112,52 @@ void mainLoop() {
 	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
 	glc(glEnableVertexAttribArray(0));
 
+	//Floor
+	float floor_vertices[] = {
+		-0.5f, 0.0f, 0.5f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 100.0f,
+		0.5f, 0.0f, -0.5f,   0.0f, 1.0f, 0.0f, 100.0f, 100.0f,
+		0.5f, 0.0f, 0.5f,    0.0f, 1.0f, 0.0f, 100.0f, 0.0f,
+	};
+
+	unsigned int floor_indices[] = {
+		0, 3, 2,
+		2, 1, 0
+	};
+
+	unsigned int floor_vao;
+	glc(glGenVertexArrays(1, &floor_vao));
+	glc(glBindVertexArray(floor_vao));
+
+	unsigned int floor_vbo;
+	glc(glGenBuffers(1, &floor_vbo));
+	glc(glBindBuffer(GL_ARRAY_BUFFER, floor_vbo));
+	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(floor_vertices), floor_vertices, GL_STATIC_DRAW));
+
+	unsigned int floor_ebo;
+	glc(glGenBuffers(1, &floor_ebo));
+	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_ebo));
+	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(floor_indices), floor_indices, GL_STATIC_DRAW));
+
+	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
+	glc(glEnableVertexAttribArray(0));
+	glc(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
+	glc(glEnableVertexAttribArray(1));
+	glc(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))));
+	glc(glEnableVertexAttribArray(2));
+
 
 	//Shader
+	
 	Shader shaderProgram = Shader::parse("vertex", "fragment");
 	shaderProgram.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 
 	Shader lightShader = Shader::parse("lightVertex", "lightFragment");
 	lightShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
+
+	Shader floor_shader = Shader::parse("vertex", "fragment");
+	floor_shader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
+	
 
 	//MVP for object
 	glm::mat4 model = glm::mat4(1.0f);
@@ -129,20 +172,50 @@ void mainLoop() {
 	shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 	shaderProgram.set_mat_uniforms("material.specular","material.shininess");
 	shaderProgram.set_material(
-		glm::vec3(1.0f, 0.5f, 0.31f),
 		32.0f
 	);
 	shaderProgram.set_light_uniforms("light.ambient", "light.specular", "light.diffuse");
 	shaderProgram.set_light(
 		glm::vec3(0.2f, 0.2f, 0.2f),
 		glm::vec3(0.5f, 0.5f, 0.5f),
-		glm::vec3(1.0f)
+		glm::vec3(1.0f),
+		1.0f,
+		0.09f,
+		0.032f
 	);
+
+	glm::mat4 model_floor = glm::mat4(1.0f);
+	model_floor = glm::translate(model_floor, glm::vec3(0.0f, -2.0f, 0.0f));
+	model_floor = glm::scale(model_floor, glm::vec3(100.0f));
+	floor_shader.attach();
+	floor_shader.model(model_floor, true);
+	floor_shader.view(view);
+	floor_shader.project(projection);
+	floor_shader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+	floor_shader.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
+
+	floor_shader.set_mat_uniforms("material.specular","material.shininess");
+	floor_shader.set_material(
+		18.0f
+	);
+	floor_shader.set_light_uniforms("light.ambient", "light.specular", "light.diffuse");
+	floor_shader.set_light(
+		glm::vec3(0.2f, 0.2f, 0.2f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(1.0f),
+		1.0f,
+		0.09f,
+		0.032f
+	);
+	
 
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
 	glm::vec3 light_position(1.2f, 1.0f, 1.0f);
+	shaderProgram.attach();
 	shaderProgram.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
+	floor_shader.attach();
+	floor_shader.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
 	modelLight = glm::mat4(1.0f);
 	modelLight = glm::translate(modelLight, light_position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
@@ -154,11 +227,64 @@ void mainLoop() {
 
 	shaderProgram.attach();
 	Texture container = Texture::from_image("container2.png", shaderProgram, "material.diffuse", 0);
+	Texture container_specular = Texture::from_image("container2_specular.png", shaderProgram, "material.specular", 1);
 
+	floor_shader.attach();
+	Texture floor_diffuse = Texture::from_image("container2.png", floor_shader, "material.diffuse", 0);
+	Texture floor_specular = Texture::from_image("container2_specular.png", floor_shader, "material.specular", 1);
+	/*
+	std::vector<float> sphereVertices = fibonacchi_sphere(150);
+	unsigned int SVAO;
+	glc(glGenVertexArrays(1, &SVAO));
+	glc(glBindVertexArray(SVAO));
+
+	//Object
+	unsigned int SVBO;
+	glc(glGenBuffers(1, &SVBO));
+	glc(glBindBuffer(GL_ARRAY_BUFFER, SVBO));
+	glc(glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW));
+	
+	//Link vertex attributes
+	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+	glc(glEnableVertexAttribArray(0));
+
+	Shader sphereShader = Shader::parse("sphereVertex", "sphereFragment");
+	sphereShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
+	sphereShader.attach();
+	glm::mat4 modelSphere = glm::mat4(1.0f);
+	modelSphere = glm::translate(modelSphere, glm::vec3(10.0f, 0.0f, 5.0f));
+	modelSphere = glm::scale(modelSphere, glm::vec3(5.0f));
+	sphereShader.model(modelSphere, false);
+	sphereShader.view(view);
+	sphereShader.project(projection);
+	*/
+
+
+	size_t n_Cubes = 20;
+	std::vector<glm::vec3> cubePositions(n_Cubes, glm::vec3(0.0f));
+	std::vector<glm::vec3> cubeAxisOfRotations(n_Cubes, glm::vec3(0.0f));
+	std::vector<float> cubeRotations(n_Cubes, 0.0f);
+	
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution xz(-3.0f, 3.0f);
+	std::uniform_real_distribution y(1.0f, 5.0f);
+	std::uniform_real_distribution rot(0.0f, 2 * glm::pi<float>());
+	std::uniform_real_distribution axis(0.0f, 1.0f);
+	for (size_t i = 0; i < n_Cubes; i++) {
+		cubePositions[i] = glm::vec3(xz(rd), y(rd), xz(rd));
+		cubeAxisOfRotations[i] = glm::vec3(axis(rd), axis(rd), axis(rd));
+		cubeRotations[i] = rot(rd);
+	}
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glc(glEnable(GL_DEPTH_TEST));
+	glc(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
 
 	float lastFrameTime = 0.0f;
@@ -177,21 +303,42 @@ void mainLoop() {
 		glc(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		//Update light position
-		light_position.x = cos(glfwGetTime());
-		light_position.y = cos(glfwGetTime() / 3.0f);
-		light_position.z = sin(glfwGetTime());
+		light_position.x = 3.0f * cos(glfwGetTime());
+		light_position.y = glm::abs(5.0f * cos(glfwGetTime() / 3.0f));
+		light_position.z = 3.0f * sin(glfwGetTime());
 
+		view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 		
 		//Update and draw object
-		container.activate()->bind();
+		
 		shaderProgram.attach();
-		view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
+		container.activate()->bind();
+		container_specular.activate()->bind();
 		shaderProgram.view(view);
 		shaderProgram.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
 		shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+
+		for (size_t i = 0; i < n_Cubes; i++) {
+			glm::mat4 mod = glm::mat4(1.0f);
+			mod = glm::translate(mod, cubePositions[i]);
+			mod = glm::rotate(mod, cubeRotations[i], cubeAxisOfRotations[i]);
+			shaderProgram.model(mod, true);
+			glc(glBindVertexArray(VAO));
+			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+			glc(glBindTexture(GL_TEXTURE_2D, 0));
+		}
 		
-		glc(glBindVertexArray(VAO));
-		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+		floor_shader.attach();
+		floor_diffuse.activate()->bind();
+		floor_specular.activate()->bind();
+		floor_shader.view(view);
+		floor_shader.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
+		floor_shader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+
+
+		glc(glBindVertexArray(floor_vao));
+		glc(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 		glc(glBindTexture(GL_TEXTURE_2D, 0));
 
 		//Draw light
@@ -204,10 +351,18 @@ void mainLoop() {
 
 		glc(glBindVertexArray(LVAO));
 		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+		//Draw sphere
+	//	sphereShader.attach();
+	//	sphereShader.view(view);
+
+	//	glc(glBindVertexArray(SVAO));
+	//	glc(glDrawArrays(GL_POINTS, 0, sphereVertices.size()));
 		
 		//Unbind
 		glc(glBindVertexArray(0));
-		shaderProgram.deattach();
+		floor_shader.deattach();
+		//shaderProgram.deattach();
 
 		//Events and swap buffers
 		glfwSwapBuffers(window);

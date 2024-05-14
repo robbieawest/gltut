@@ -51,6 +51,7 @@ void init() {
 	spdlog::info("glfw and glew initialized successfully.");
 }
 
+
 /*
 //Load model vertices from file
 void load_vertices(std::string filename, int n_properties, int indices[], float vertices[]) {
