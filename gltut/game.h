@@ -10,6 +10,7 @@
 #include "camera.h"
 #include "mouse.h"
 #include "sphere.h"
+#include "light.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -149,14 +150,14 @@ void mainLoop() {
 
 	//Shader
 	
-	Shader shaderProgram = Shader::parse("vertex", "fragment");
-	shaderProgram.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
+	Shader cubeShader = Shader::parse("vertex", "fragment");
+	cubeShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 
 	Shader lightShader = Shader::parse("lightVertex", "lightFragment");
 	lightShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
 
-	Shader floor_shader = Shader::parse("vertex", "fragment");
-	floor_shader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
+	Shader floorShader = Shader::parse("vertex", "fragment");
+	floorShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 	
 
 	//MVP for object
@@ -165,59 +166,51 @@ void mainLoop() {
 	view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 	
-	shaderProgram.attach();
-	shaderProgram.model(model, true);
-	shaderProgram.view(view);
-	shaderProgram.project(projection);
-	shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
-	shaderProgram.set_mat_uniforms("material.specular","material.shininess");
-	shaderProgram.set_material(
+	cubeShader.attach();
+	cubeShader.model(model, true);
+	cubeShader.view(view);
+	cubeShader.project(projection);
+	cubeShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+	cubeShader.set_mat_uniforms("material.specular","material.shininess");
+	cubeShader.set_material(
 		32.0f
-	);
-	shaderProgram.set_light_uniforms("light.ambient", "light.specular", "light.diffuse");
-	shaderProgram.set_light(
-		glm::vec3(0.2f, 0.2f, 0.2f),
-		glm::vec3(0.5f, 0.5f, 0.5f),
-		glm::vec3(1.0f),
-		1.0f,
-		0.09f,
-		0.032f
 	);
 
 	glm::mat4 model_floor = glm::mat4(1.0f);
 	model_floor = glm::translate(model_floor, glm::vec3(0.0f, -2.0f, 0.0f));
 	model_floor = glm::scale(model_floor, glm::vec3(100.0f));
-	floor_shader.attach();
-	floor_shader.model(model_floor, true);
-	floor_shader.view(view);
-	floor_shader.project(projection);
-	floor_shader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
-	floor_shader.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
-
-	floor_shader.set_mat_uniforms("material.specular","material.shininess");
-	floor_shader.set_material(
+	floorShader.attach();
+	floorShader.model(model_floor, true);
+	floorShader.view(view);
+	floorShader.project(projection);
+	floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+	floorShader.set_mat_uniforms("material.specular","material.shininess");
+	floorShader.set_material(
 		18.0f
 	);
-	floor_shader.set_light_uniforms("light.ambient", "light.specular", "light.diffuse");
-	floor_shader.set_light(
-		glm::vec3(0.2f, 0.2f, 0.2f),
-		glm::vec3(0.5f, 0.5f, 0.5f),
-		glm::vec3(1.0f),
-		1.0f,
-		0.09f,
-		0.032f
-	);
 	
+	//Lights
+	std::vector<Light> lights = {
+		{
+			glm::vec3(1.2f, 1.0f, 1.0f),
+			glm::vec3(0.2f, 0.2f, 0.2f),
+			glm::vec3(0.5f, 0.5f, 0.5f),
+			glm::vec3(1.0f),
+			1.0f,
+			0.09f,
+			0.032f
+		}
+	};
+
+	Light::updateShader(cubeShader, lights);
+	Light::updateShader(floorShader, lights);
 
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
-	glm::vec3 light_position(1.2f, 1.0f, 1.0f);
-	shaderProgram.attach();
-	shaderProgram.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
-	floor_shader.attach();
-	floor_shader.uniform3f("light.position", 1.2f, 1.0f, 1.0f);
+	cubeShader.attach();
+	floorShader.attach();
 	modelLight = glm::mat4(1.0f);
-	modelLight = glm::translate(modelLight, light_position);
+	modelLight = glm::translate(modelLight, lights[0].position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 
 	lightShader.attach();
@@ -225,13 +218,15 @@ void mainLoop() {
 	lightShader.view(view);
 	lightShader.project(projection);
 
-	shaderProgram.attach();
-	Texture container = Texture::from_image("container2.png", shaderProgram, "material.diffuse", 0);
-	Texture container_specular = Texture::from_image("container2_specular.png", shaderProgram, "material.specular", 1);
+	cubeShader.attach();
+	Texture container = Texture::from_image("container2.png", cubeShader, "material.diffuse", 0);
+	Texture container_specular = Texture::from_image("container2_specular.png", cubeShader, "material.specular", 1);
 
-	floor_shader.attach();
-	Texture floor_diffuse = Texture::from_image("container2.png", floor_shader, "material.diffuse", 0);
-	Texture floor_specular = Texture::from_image("container2_specular.png", floor_shader, "material.specular", 1);
+	floorShader.attach();
+	Texture floor_diffuse = Texture::from_image("container2.png", floorShader, "material.diffuse", 0);
+	Texture floor_specular = Texture::from_image("container2_specular.png", floorShader, "material.specular", 1);
+	
+	
 	/*
 	std::vector<float> sphereVertices = fibonacchi_sphere(150);
 	unsigned int SVAO;
@@ -277,7 +272,6 @@ void mainLoop() {
 		cubeRotations[i] = rot(rd);
 	}
 
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
@@ -303,38 +297,40 @@ void mainLoop() {
 		glc(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		//Update light position
-		light_position.x = 3.0f * cos(glfwGetTime());
-		light_position.y = glm::abs(5.0f * cos(glfwGetTime() / 3.0f));
-		light_position.z = 3.0f * sin(glfwGetTime());
+		lights[0].position = glm::vec3(
+			3.0f * cos(glfwGetTime()),
+			glm::abs(5.0f * cos(glfwGetTime() / 3.0f)),
+			3.0f * sin(glfwGetTime())
+		);
+		Light::updateShaderOnlyPositions(cubeShader, lights);
+		Light::updateShaderOnlyPositions(floorShader, lights);
 
 		view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 		
 		//Update and draw object
 		
-		shaderProgram.attach();
+		cubeShader.attach();
 		container.activate()->bind();
 		container_specular.activate()->bind();
-		shaderProgram.view(view);
-		shaderProgram.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
-		shaderProgram.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+		cubeShader.view(view);
+		cubeShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 
 		for (size_t i = 0; i < n_Cubes; i++) {
 			glm::mat4 mod = glm::mat4(1.0f);
 			mod = glm::translate(mod, cubePositions[i]);
 			mod = glm::rotate(mod, cubeRotations[i], cubeAxisOfRotations[i]);
-			shaderProgram.model(mod, true);
+			cubeShader.model(mod, true);
 			glc(glBindVertexArray(VAO));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 			glc(glBindTexture(GL_TEXTURE_2D, 0));
 		}
 		
 
-		floor_shader.attach();
+		floorShader.attach();
 		floor_diffuse.activate()->bind();
 		floor_specular.activate()->bind();
-		floor_shader.view(view);
-		floor_shader.uniform3f("light.position", light_position.x, light_position.y, light_position.z);
-		floor_shader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+		floorShader.view(view);
+		floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 
 
 		glc(glBindVertexArray(floor_vao));
@@ -344,7 +340,7 @@ void mainLoop() {
 		//Draw light
 		lightShader.attach();
 		modelLight = glm::mat4(1.0f);
-		modelLight = glm::translate(modelLight, light_position);
+		modelLight = glm::translate(modelLight, lights[0].position);
 		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 		lightShader.model(modelLight, false);
 		lightShader.view(view);
@@ -361,8 +357,8 @@ void mainLoop() {
 		
 		//Unbind
 		glc(glBindVertexArray(0));
-		floor_shader.deattach();
-		//shaderProgram.deattach();
+		floorShader.deattach();
+		//cubeShader.deattach();
 
 		//Events and swap buffers
 		glfwSwapBuffers(window);
