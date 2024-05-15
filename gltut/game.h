@@ -35,51 +35,8 @@ void mainLoop() {
 	assert_cond(window, "window setup check");
 
 
-	float cube_vertices[] = {
-		// positions          // normals           // texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-	};
-
+	vertex_data cubeData = load_vertex_data("cubeVertices.csv");
+	std::vector<float> cubeVertices = cubeData.first;
 	
 	//Create vertex array object to bind our VBO and vertex linking to
 	unsigned int VAO;
@@ -91,7 +48,7 @@ void mainLoop() {
 	unsigned int VBO;
 	glc(glGenBuffers(1, &VBO));
 	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW));
+	glc(glBufferData(GL_ARRAY_BUFFER, cubeVertices.size() * sizeof(float), cubeVertices.data(), GL_STATIC_DRAW));
 
 	
 	//Link vertex attributes
@@ -114,17 +71,9 @@ void mainLoop() {
 	glc(glEnableVertexAttribArray(0));
 
 	//Floor
-	float floor_vertices[] = {
-		-0.5f, 0.0f, 0.5f,   0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-		-0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 100.0f,
-		0.5f, 0.0f, -0.5f,   0.0f, 1.0f, 0.0f, 100.0f, 100.0f,
-		0.5f, 0.0f, 0.5f,    0.0f, 1.0f, 0.0f, 100.0f, 0.0f,
-	};
-
-	unsigned int floor_indices[] = {
-		0, 3, 2,
-		2, 1, 0
-	};
+	vertex_data floor_data = load_vertex_data("floorVertices.csv");
+	std::vector<float> floorVertices = floor_data.first;
+	std::vector<unsigned int> floorIndices = floor_data.second;
 
 	unsigned int floor_vao;
 	glc(glGenVertexArrays(1, &floor_vao));
@@ -133,12 +82,12 @@ void mainLoop() {
 	unsigned int floor_vbo;
 	glc(glGenBuffers(1, &floor_vbo));
 	glc(glBindBuffer(GL_ARRAY_BUFFER, floor_vbo));
-	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(floor_vertices), floor_vertices, GL_STATIC_DRAW));
+	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * floorVertices.size(), floorVertices.data(), GL_STATIC_DRAW));
 
 	unsigned int floor_ebo;
 	glc(glGenBuffers(1, &floor_ebo));
 	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_ebo));
-	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(floor_indices), floor_indices, GL_STATIC_DRAW));
+	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * floorIndices.size(), floorIndices.data(), GL_STATIC_DRAW));
 
 	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
 	glc(glEnableVertexAttribArray(0));

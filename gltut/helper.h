@@ -1,9 +1,12 @@
 #pragma once
 #include <GL/glew.h>
-
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <string>
+#include <stdexcept>
+#include <fstream>
+#include "glm/glm.hpp"
 #include "spdlog/spdlog.h"
 #include "GLError.h"
 
@@ -51,14 +54,11 @@ void init() {
 	spdlog::info("glfw and glew initialized successfully.");
 }
 
+typedef std::pair<std::vector<float>, std::vector<unsigned int>> vertex_data;
 
-/*
 //Load model vertices from file
-void load_vertices(std::string filename, int n_properties, int indices[], float vertices[]) {
-	if (sizeof(vertices) / sizeof(float) != n_properties) {
-		spdlog::error("vertices size given is not consistent with the number of properties.");
-		return;
-	}
+vertex_data load_vertex_data(std::string filename) {
+	vertex_data out = std::make_pair(std::vector<float>(), std::vector<unsigned int>());
 	
 	std::vector<std::string> spl_res = split(filename, '.');
 	if (spl_res.size() != 2)spdlog::error("Invalid filename format: {}", filename);
@@ -70,22 +70,45 @@ void load_vertices(std::string filename, int n_properties, int indices[], float 
 	std::ifstream file_stream(path);
 	if (!file_stream.is_open()) {
 		spdlog::error("Could not open file {}", path);
-		return;
+		return out;
 	}
-	file_stream.ignore('\n');//Ignore first line
 
 	std::string curr_line;
 	int i = 0;
+	bool readingVertexData = true;
 	while (std::getline(file_stream, curr_line)) {
+		if (i == 0) {
+			i++;
+			continue;
+		}
+
+		if (curr_line.empty())continue;
+		if (curr_line[0] == '/') {
+			readingVertexData = false;
+			continue;
+		}
 
 		std::vector<std::string> split_line = split(curr_line, ',');
+		for (std::string& data : split_line) {
+			try {
+				if (readingVertexData)
+					out.first.push_back(std::stof(data));
+				else
+					out.second.push_back(std::stoul(data));
+			}
+			catch (const std::exception& ex) {
+				spdlog::error("Error while parsing vertex data on line {}", i + 1);
+				spdlog::error(ex.what());
+			}
+		}
 		
-		
-		vertices[i] = 
 		i++;
 	}
+
+	file_stream.close();
+
+	return out;
 }
-*/
 
 
 
