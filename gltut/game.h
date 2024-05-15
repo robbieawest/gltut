@@ -153,8 +153,11 @@ void mainLoop() {
 	Shader cubeShader = Shader::parse("vertex", "fragment");
 	cubeShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 
-	Shader lightShader = Shader::parse("lightVertex", "lightFragment");
-	lightShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
+	Shader lightShader1 = Shader::parse("lightVertex", "lightFragment");
+	lightShader1.set_mvpn("model_mat", "view_mat", "project_mat", "");
+
+	Shader lightShader2 = Shader::parse("lightVertex", "lightFragment");
+	lightShader2.set_mvpn("model_mat", "view_mat", "project_mat", "");
 
 	Shader floorShader = Shader::parse("vertex", "fragment");
 	floorShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
@@ -198,12 +201,39 @@ void mainLoop() {
 			glm::vec3(1.0f),
 			1.0f,
 			0.09f,
-			0.032f
+			0.032f,
+			&lightShader1,
+			[](float time) -> glm::vec3 {
+				return glm::vec3(
+					3.0f * cos(glfwGetTime()),
+					glm::abs(5.0f * cos(glfwGetTime() / 3.0f)),
+					3.0f * sin(glfwGetTime())
+				);
+			}
+		},
+
+		{
+			glm::vec3(1.2f, 1.0f, 1.0f),
+			glm::vec3(0.4f, 0.1f, 0.1f),
+			glm::vec3(0.8f, 0.1f, 0.1f),
+			glm::vec3(1.0f, 0.0f, 0.0f),
+			1.0f,
+			0.3f,
+			0.2f,
+			&lightShader2,
+			[](float time) -> glm::vec3 {
+				return glm::vec3(
+					3.0f * cos(glfwGetTime() * 2.0f),
+					glm::abs(5.0f * cos(glfwGetTime() / 8.0f)),
+					3.0f * sin(glfwGetTime() * 2.0f)
+				);
+			}
 		}
 	};
 
 	Light::updateShader(cubeShader, lights);
 	Light::updateShader(floorShader, lights);
+	Light::updateLightFragmentUniforms(lights);
 
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
@@ -213,10 +243,12 @@ void mainLoop() {
 	modelLight = glm::translate(modelLight, lights[0].position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 
-	lightShader.attach();
-	lightShader.model(modelLight, false);
-	lightShader.view(view);
-	lightShader.project(projection);
+	lightShader1.attach();
+	lightShader1.view(view);
+	lightShader1.project(projection);
+	lightShader2.attach();
+	lightShader2.view(view);
+	lightShader2.project(projection);
 
 	cubeShader.attach();
 	Texture container = Texture::from_image("container2.png", cubeShader, "material.diffuse", 0);
@@ -297,11 +329,7 @@ void mainLoop() {
 		glc(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		//Update light position
-		lights[0].position = glm::vec3(
-			3.0f * cos(glfwGetTime()),
-			glm::abs(5.0f * cos(glfwGetTime() / 3.0f)),
-			3.0f * sin(glfwGetTime())
-		);
+		Light::updateLightsPositions(lights, currentTime);
 		Light::updateShaderOnlyPositions(cubeShader, lights);
 		Light::updateShaderOnlyPositions(floorShader, lights);
 
@@ -337,16 +365,18 @@ void mainLoop() {
 		glc(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 		glc(glBindTexture(GL_TEXTURE_2D, 0));
 
-		//Draw light
-		lightShader.attach();
-		modelLight = glm::mat4(1.0f);
-		modelLight = glm::translate(modelLight, lights[0].position);
-		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-		lightShader.model(modelLight, false);
-		lightShader.view(view);
+		//Draw lights
+		for (const Light& light : lights) {
+			light.shaderObj->attach();
+			light.shaderObj->view(view);
+			modelLight = glm::mat4(1.0f);
+			modelLight = glm::translate(modelLight, light.position);
+			modelLight = glm::scale(modelLight, glm::vec3(0.2f));
+			light.shaderObj->model(modelLight, false);
 
-		glc(glBindVertexArray(LVAO));
-		glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+			glc(glBindVertexArray(LVAO));
+			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
+		}
 
 		//Draw sphere
 	//	sphereShader.attach();
