@@ -56,7 +56,7 @@ namespace ObjectManager {
 		std::unordered_map<objId, GLuint> vertexArrayMappings;
 		std::unordered_map<objId, GLuint> vertexBufferMappings;
 		std::unordered_map<objId, GLuint> elementBufferMappings;
-		std::unordered_map<objId, Shader> shaderProgramMappings;
+		std::unordered_map<objId, Shader*> shaderProgramMappings;
 
 		ObjectManager() {}
 		~ObjectManager() {
@@ -158,7 +158,7 @@ namespace ObjectManager {
 			return vArrayMap->second;
 		}
 
-		void mapVertexBuffer(objId _id, void* bufferData, VertexBufferLayout layout) {
+		void mapVertexBuffer(objId _id, void* bufferData) {
 			validateId(_id);
 
 			GLuint vbo;
@@ -166,6 +166,11 @@ namespace ObjectManager {
 			glc(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 			glc(glBufferData(GL_ARRAY_BUFFER, sizeof(bufferData), bufferData, GL_STATIC_DRAW));
 			
+
+			vertexBufferMappings.insert(std::make_pair(_id, vbo));
+		}
+
+		void expressVertexLayout(VertexBufferLayout layout) {
 			std::vector<unsigned int> vertexProperties = layout.getProperties();
 			unsigned int offset = 0;
 			for (size_t i = 0; i < vertexProperties.size(); ++i) {
@@ -175,8 +180,6 @@ namespace ObjectManager {
 
 				offset += property;
 			}
-
-			vertexBufferMappings.insert(std::make_pair(_id, vbo));
 		}
 
 		void mapSharedVertexBuffer(objId _id, objId shareFrom) {
@@ -249,7 +252,7 @@ namespace ObjectManager {
 				return nullptr;
 			}
 
-			return &vShaderMap->second;
+			return vShaderMap->second;
 		}
 	};
 }

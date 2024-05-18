@@ -1,8 +1,11 @@
 #pragma once
-#include "helper.h"
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+
+#include "helper.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 
 class Shader {

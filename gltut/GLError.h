@@ -1,10 +1,12 @@
 #pragma once
-#include "spdlog/spdlog.h"
 #include "GL/glew.h"
+
 #include <sstream>
 #include <vector>
 #include <iterator>
 #include <string>
+
+#include "spdlog/spdlog.h"
 
 //Miscellaneous
 
