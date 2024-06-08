@@ -150,7 +150,6 @@
     <ClInclude Include="light.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="ObjectManager.h" />
-    <ClInclude Include="Resources\Models\ObjectManager.h" />
     <ClInclude Include="Resources\Shaders\spherefragment.glsl" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="sphere.h" />

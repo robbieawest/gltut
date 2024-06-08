@@ -101,7 +101,7 @@ namespace ObjectManager {
 			}
 
 			if (eBuf != elementBufferMappings.end()) {
-				glc(glBindBuffer(GL_ARRAY_BUFFER, eBuf->second));
+				glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eBuf->second));
 			}
 
 			vertexArrayMappings.insert(std::make_pair(_id, vao));
@@ -158,13 +158,13 @@ namespace ObjectManager {
 			return vArrayMap->second;
 		}
 
-		void mapVertexBuffer(objId _id, void* bufferData) {
+		void mapVertexBuffer(objId _id, void* bufferData, int nVertices) {
 			validateId(_id);
 
 			GLuint vbo;
 			glc(glGenBuffers(1, &vbo));
 			glc(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-			glc(glBufferData(GL_ARRAY_BUFFER, sizeof(bufferData), bufferData, GL_STATIC_DRAW));
+			glc(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nVertices, bufferData, GL_STATIC_DRAW));
 			
 
 			vertexBufferMappings.insert(std::make_pair(_id, vbo));

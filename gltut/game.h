@@ -11,7 +11,7 @@
 #include "mouse.h"
 #include "sphere.h"
 #include "light.h"
-//#include "ObjectManager.h"
+#include "ObjectManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -39,56 +39,21 @@ void mainLoop() {
 	vertex_data cubeData = load_vertex_data("cubeVertices.csv");
 	std::vector<float> cubeVertices = cubeData.first;
 
-	//ObjectManager::ObjectManager* objectManager = ObjectManager::ObjectManager::getInstance();
-//	objId cubeObjectData = objectManager->registerObject();
+	ObjectManager::ObjectManager* objectManager = ObjectManager::ObjectManager::getInstance();
+	objId cubeObjectData = objectManager->registerObject();
 	
-	//Create vertex array object to bind our VBO and vertex linking to
-	/*
-	unsigned int VAO;
-	glc(glGenVertexArrays(1, &VAO));
-	glc(glBindVertexArray(VAO));
-	*/
-
+	
 	//Object
-//	objectManager->mapVertexArray(cubeObjectData);
-//	objectManager->mapVertexBuffer(cubeObjectData, cubeVertices.data());
-//	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
-
-
-	/*
-	unsigned int VBO;
-	glc(glGenBuffers(1, &VBO));
-	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-	glc(glBufferData(GL_ARRAY_BUFFER, cubeVertices.size() * sizeof(float), cubeVertices.data(), GL_STATIC_DRAW));
-
-	
-	//Link vertex attributes
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
-	glc(glEnableVertexAttribArray(0));
-	glc(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
-	glc(glEnableVertexAttribArray(1));
-	glc(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))))
-	glc(glEnableVertexAttribArray(2));
-	*/
-	
+	objectManager->mapVertexArray(cubeObjectData);
+	objectManager->mapVertexBuffer(cubeObjectData, cubeVertices.data(), cubeVertices.size());
+	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
 	//Light source
-//	objId lightData = objectManager->registerObject();
-//	objectManager->mapVertexArray(lightData);
-//	objectManager->mapSharedVertexBuffer(lightData, cubeObjectData);
-//	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	objId lightData = objectManager->registerObject();
+	objectManager->mapVertexArray(lightData);
+	objectManager->mapSharedVertexBuffer(lightData, cubeObjectData);
+	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
-	/*
-	unsigned int LVAO;
-	glc(glGenVertexArrays(1, &LVAO));
-	glc(glBindVertexArray(LVAO));
-	glc(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-	
-	
-	//Link vertex attributes
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
-	glc(glEnableVertexAttribArray(0));
-	*/
 
 	//Floor
 	vertex_data floor_data = load_vertex_data("floorVertices.csv");
@@ -211,13 +176,13 @@ void mainLoop() {
 	modelLight = glm::mat4(1.0f);
 	modelLight = glm::translate(modelLight, lights[0].position);
 	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-
-	lightShader1.attach();
-	lightShader1.view(view);
-	lightShader1.project(projection);
-	lightShader2.attach();
-	lightShader2.view(view);
-	lightShader2.project(projection);
+	
+	for (Light& light : lights) {
+		light.shaderObj->attach();
+		light.shaderObj->view(view);
+		light.shaderObj->project(projection);
+		light.shaderObj->model(modelLight, false);
+	}
 
 	cubeShader.attach();
 	Texture container = Texture::from_image("container2.png", cubeShader, "material.diffuse", 0);
@@ -317,7 +282,7 @@ void mainLoop() {
 			mod = glm::translate(mod, cubePositions[i]);
 			mod = glm::rotate(mod, cubeRotations[i], cubeAxisOfRotations[i]);
 			cubeShader.model(mod, true);
-		//	glc(glBindVertexArray(objectManager->getVertexArray(cubeObjectData)));
+			glc(glBindVertexArray(objectManager->getVertexArray(cubeObjectData)));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 			glc(glBindTexture(GL_TEXTURE_2D, 0));
 		}
@@ -343,7 +308,7 @@ void mainLoop() {
 			modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 			light.shaderObj->model(modelLight, false);
 
-		//	glc(glBindVertexArray(objectManager->getVertexArray(lightData)));
+			glc(glBindVertexArray(objectManager->getVertexArray(lightData)));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 		}
 
