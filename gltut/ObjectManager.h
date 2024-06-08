@@ -70,6 +70,8 @@ namespace ObjectManager {
 				spdlog::error("ObjectManager: _id {} not registered with ObjectMapper.", _id);
 				return false;
 			}
+			if (_id >= 2) {
+			}
 
 			return true;
 		}
@@ -158,13 +160,13 @@ namespace ObjectManager {
 			return vArrayMap->second;
 		}
 
-		void mapVertexBuffer(objId _id, void* bufferData, int nVertices) {
+		void mapVertexBuffer(objId _id, void* bufferData, size_t bufferSize) {
 			validateId(_id);
 
 			GLuint vbo;
 			glc(glGenBuffers(1, &vbo));
 			glc(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-			glc(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nVertices, bufferData, GL_STATIC_DRAW));
+			glc(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * bufferSize, bufferData, GL_STATIC_DRAW));
 			
 
 			vertexBufferMappings.insert(std::make_pair(_id, vbo));
@@ -207,13 +209,13 @@ namespace ObjectManager {
 			return vBufMap->second;
 		}
 
-		void mapElementBuffer(objId _id, void* bufferData) {
+		void mapElementBuffer(objId _id, void* bufferData, size_t bufferSize) {
 			validateId(_id);
 
 			unsigned int ebo;
 			glc(glGenBuffers(1, &ebo));
 			glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-			glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(bufferData), bufferData, GL_STATIC_DRAW));
+			glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * bufferSize, bufferData, GL_STATIC_DRAW));
 
 			elementBufferMappings.insert(std::make_pair(_id, ebo));
 		}

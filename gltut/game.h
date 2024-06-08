@@ -59,7 +59,8 @@ void mainLoop() {
 	vertex_data floor_data = load_vertex_data("floorVertices.csv");
 	std::vector<float> floorVertices = floor_data.first;
 	std::vector<unsigned int> floorIndices = floor_data.second;
-
+	
+	/*
 	unsigned int floor_vao;
 	glc(glGenVertexArrays(1, &floor_vao));
 	glc(glBindVertexArray(floor_vao));
@@ -80,6 +81,14 @@ void mainLoop() {
 	glc(glEnableVertexAttribArray(1));
 	glc(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))));
 	glc(glEnableVertexAttribArray(2));
+
+	*/
+
+	objId floorData = objectManager->registerObject();
+	objectManager->mapVertexArray(floorData);
+	objectManager->mapVertexBuffer(floorData, floorVertices.data(), floorVertices.size());
+	objectManager->mapElementBuffer(floorData, floorIndices.data(), floorIndices.size());
+	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
 
 	//Shader
@@ -191,34 +200,6 @@ void mainLoop() {
 	floorShader.attach();
 	Texture floor_diffuse = Texture::from_image("container2.png", floorShader, "material.diffuse", 0);
 	Texture floor_specular = Texture::from_image("container2_specular.png", floorShader, "material.specular", 1);
-	
-	
-	/*
-	std::vector<float> sphereVertices = fibonacchi_sphere(150);
-	unsigned int SVAO;
-	glc(glGenVertexArrays(1, &SVAO));
-	glc(glBindVertexArray(SVAO));
-
-	//Object
-	unsigned int SVBO;
-	glc(glGenBuffers(1, &SVBO));
-	glc(glBindBuffer(GL_ARRAY_BUFFER, SVBO));
-	glc(glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW));
-	
-	//Link vertex attributes
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
-	glc(glEnableVertexAttribArray(0));
-
-	Shader sphereShader = Shader::parse("sphereVertex", "sphereFragment");
-	sphereShader.set_mvpn("model_mat", "view_mat", "project_mat", "");
-	sphereShader.attach();
-	glm::mat4 modelSphere = glm::mat4(1.0f);
-	modelSphere = glm::translate(modelSphere, glm::vec3(10.0f, 0.0f, 5.0f));
-	modelSphere = glm::scale(modelSphere, glm::vec3(5.0f));
-	sphereShader.model(modelSphere, false);
-	sphereShader.view(view);
-	sphereShader.project(projection);
-	*/
 
 
 	size_t n_Cubes = 20;
@@ -287,15 +268,15 @@ void mainLoop() {
 			glc(glBindTexture(GL_TEXTURE_2D, 0));
 		}
 		
-
+		
 		floorShader.attach();
 		floor_diffuse.activate()->bind();
 		floor_specular.activate()->bind();
 		floorShader.view(view);
 		floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 
-
-		glc(glBindVertexArray(floor_vao));
+		
+		glc(glBindVertexArray(objectManager->getVertexArray(floorData)));
 		glc(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 		glc(glBindTexture(GL_TEXTURE_2D, 0));
 
@@ -311,18 +292,11 @@ void mainLoop() {
 			glc(glBindVertexArray(objectManager->getVertexArray(lightData)));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 		}
-
-		//Draw sphere
-	//	sphereShader.attach();
-	//	sphereShader.view(view);
-
-	//	glc(glBindVertexArray(SVAO));
-	//	glc(glDrawArrays(GL_POINTS, 0, sphereVertices.size()));
+		
 		
 		//Unbind
 		glc(glBindVertexArray(0));
 		floorShader.deattach();
-		//cubeShader.deattach();
 
 		//Events and swap buffers
 		glfwSwapBuffers(window);
