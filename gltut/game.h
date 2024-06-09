@@ -230,7 +230,7 @@ void mainLoop() {
 
 	float lastFrameTime = 0.0f;
 	float deltaTime = 0.0f;
-	//game _loop_
+	//game loop
 	while (!glfwWindowShouldClose(window)) {
 		
 		float currentTime = glfwGetTime();
