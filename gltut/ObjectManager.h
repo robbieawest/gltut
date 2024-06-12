@@ -13,7 +13,7 @@
 
 typedef unsigned int objId;
 
-namespace ObjectManager {
+namespace Resource {
 	
 	class VertexBufferLayout {
 	private:
@@ -51,20 +51,21 @@ namespace ObjectManager {
 		}
 	};
 
-	class ObjectManager {
+	class ResourceManager {
 	private:
 		const unsigned int MAX_TEXTURES = 32;
 		objId nextObjectId = 0;
+		//Maybe combine these all into one map
 		std::unordered_map<objId, GLuint> vertexArrayMappings;
 		std::unordered_map<objId, GLuint> vertexBufferMappings;
 		std::unordered_map<objId, GLuint> elementBufferMappings;
 		std::unordered_map<objId, Shader*> shaderProgramMappings;
-		std::unordered_map<objId, std::vector<Texture*>> textureMappings; 
-
-		ObjectManager() {
+		std::unordered_map<objId, std::vector<Texture*>> textureMappings;
+		
+		ResourceManager() {
 		}
 
-		~ObjectManager() {
+		~ResourceManager() {
 			//Clean up
 			for (std::pair<objId, Shader*> pair : shaderProgramMappings) {
 				delete pair.second;
@@ -77,7 +78,7 @@ namespace ObjectManager {
 			delete instance;
 		}
 
-		static ObjectManager* instance;
+		static ResourceManager* instance;
 
 		bool validateId(objId _id) const {
 			if (_id > nextObjectId) {
@@ -89,9 +90,9 @@ namespace ObjectManager {
 		}
 
 	public:
-		static ObjectManager* getInstance() {
+		static ResourceManager* getInstance() {
 			if (instance == nullptr) {
-				instance = new ObjectManager();
+				instance = new ResourceManager();
 			}
 			return instance;
 		}

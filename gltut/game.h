@@ -39,20 +39,20 @@ void mainLoop() {
 	vertex_data cubeData = load_vertex_data("cubeVertices.csv");
 	std::vector<float> cubeVertices = cubeData.first;
 
-	ObjectManager::ObjectManager* objectManager = ObjectManager::ObjectManager::getInstance();
-	objId cubeObjectData = objectManager->registerObject();
+	Resource::ResourceManager* resourceManager = Resource::ResourceManager::getInstance();
+	objId cubeObjectData = resourceManager->registerObject();
 	
 	
 	//Object
-	objectManager->mapVertexArray(cubeObjectData);
-	objectManager->mapVertexBuffer(cubeObjectData, cubeVertices.data(), cubeVertices.size());
-	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	resourceManager->mapVertexArray(cubeObjectData);
+	resourceManager->mapVertexBuffer(cubeObjectData, cubeVertices.data(), cubeVertices.size());
+	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
 	//Light source
-	objId lightData = objectManager->registerObject();
-	objectManager->mapVertexArray(lightData);
-	objectManager->mapSharedVertexBuffer(lightData, cubeObjectData);
-	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	objId lightData = resourceManager->registerObject();
+	resourceManager->mapVertexArray(lightData);
+	resourceManager->mapSharedVertexBuffer(lightData, cubeObjectData);
+	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
 
 	//Floor
@@ -84,11 +84,11 @@ void mainLoop() {
 
 	*/
 
-	objId floorData = objectManager->registerObject();
-	objectManager->mapVertexArray(floorData);
-	objectManager->mapVertexBuffer(floorData, floorVertices.data(), floorVertices.size());
-	objectManager->mapElementBuffer(floorData, floorIndices.data(), floorIndices.size());
-	objectManager->expressVertexLayout(ObjectManager::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	objId floorData = resourceManager->registerObject();
+	resourceManager->mapVertexArray(floorData);
+	resourceManager->mapVertexBuffer(floorData, floorVertices.data(), floorVertices.size());
+	resourceManager->mapElementBuffer(floorData, floorIndices.data(), floorIndices.size());
+	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
 
 	//Shader
@@ -263,7 +263,7 @@ void mainLoop() {
 			mod = glm::translate(mod, cubePositions[i]);
 			mod = glm::rotate(mod, cubeRotations[i], cubeAxisOfRotations[i]);
 			cubeShader.model(mod, true);
-			glc(glBindVertexArray(objectManager->getVertexArray(cubeObjectData)));
+			glc(glBindVertexArray(resourceManager->getVertexArray(cubeObjectData)));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 			glc(glBindTexture(GL_TEXTURE_2D, 0));
 		}
@@ -276,7 +276,7 @@ void mainLoop() {
 		floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 
 		
-		glc(glBindVertexArray(objectManager->getVertexArray(floorData)));
+		glc(glBindVertexArray(resourceManager->getVertexArray(floorData)));
 		glc(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 		glc(glBindTexture(GL_TEXTURE_2D, 0));
 
@@ -289,7 +289,7 @@ void mainLoop() {
 			modelLight = glm::scale(modelLight, glm::vec3(0.2f));
 			light.shaderObj->model(modelLight, false);
 
-			glc(glBindVertexArray(objectManager->getVertexArray(lightData)));
+			glc(glBindVertexArray(resourceManager->getVertexArray(lightData)));
 			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
 		}
 		

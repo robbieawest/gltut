@@ -1,8 +1,8 @@
 
-namespace ObjectManager { //Diabolical fix
-	class ObjectManager {
-		static ObjectManager* instance;
+namespace Resource { //Diabolical fix
+	class ResourceManager {
+		static ResourceManager* instance;
 	};
 }
 
-ObjectManager::ObjectManager* ObjectManager::ObjectManager::instance = nullptr;
+Resource::ResourceManager* Resource::ResourceManager::instance = nullptr;
