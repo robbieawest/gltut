@@ -12,7 +12,7 @@ class Shader {
 
 private:
 
-	unsigned int id = -1;
+	unsigned int id = -1, textureUnit = 0;
 	std::string m = "", v = "", p = "", n = "";
 	std::string specular, shininess;
 	std::string lambient, lspecular, ldiffuse;
@@ -39,7 +39,18 @@ private:
 
 public:
 
+	
 	Shader() {}
+
+	unsigned int getTextureUnit() const {
+		return textureUnit;
+	}
+
+	void addTexture(std::string uniform) {
+		attach();
+		uniform1i(uniform, textureUnit++);
+	}
+
 
 	static Shader parse(std::string vertex_path, std::string fragment_path) {
 

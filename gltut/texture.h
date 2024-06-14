@@ -17,7 +17,7 @@ public:
 		stbi_set_flip_vertically_on_load(true);
 	}
 
-	static Texture from_image(std::string filename, Shader& shaderProgram, std::string uniform_id, unsigned int unit) {
+	static Texture from_image(std::string filename, Shader& shaderProgram, std::string uniform_id) {
 		std::vector<std::string> spl_res = split(filename, '.');
 		if (spl_res.size() != 2)spdlog::error("Invalid filename format: {}", filename);
 		std::string extension = spl_res[1];
@@ -31,13 +31,14 @@ public:
 		
 		//Create texture
 		glc(glGenTextures(1, &ret.id));
-
+		
+		unsigned int unit = shaderProgram.getTextureUnit();
 		if (unit > 31)spdlog::error("Texture unit cannot be greater than 31");
 		ret.type = GL_TEXTURE0 + unit;
 
 		glc(glActiveTexture(ret.type));
 		glc(glBindTexture(GL_TEXTURE_2D, ret.id));
-		shaderProgram.uniform1i(uniform_id, unit);
+		shaderProgram.addTexture(uniform_id);
 
 		glc(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
 		glc(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));

@@ -11,7 +11,8 @@
 #include "mouse.h"
 #include "sphere.h"
 #include "light.h"
-#include "ObjectManager.h"
+#include "ResourceManager.h"
+#include "RenderInstance.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -34,77 +35,28 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void mainLoop() {
 	assert_cond(window, "window setup check");
-
-
-	vertex_data cubeData = load_vertex_data("cubeVertices.csv");
-	std::vector<float> cubeVertices = cubeData.first;
-
-	Resource::ResourceManager* resourceManager = Resource::ResourceManager::getInstance();
-	objId cubeObjectData = resourceManager->registerObject();
 	
+	//New
+	RenderInstance cube("vertex", "fragment");
+	cube.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 	
-	//Object
-	resourceManager->mapVertexArray(cubeObjectData);
-	resourceManager->mapVertexBuffer(cubeObjectData, cubeVertices.data(), cubeVertices.size());
-	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	RenderInstance lightInstance1("lightVertex", "lightFragment");
+	lightInstance1.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
-	//Light source
-	objId lightData = resourceManager->registerObject();
-	resourceManager->mapVertexArray(lightData);
-	resourceManager->mapSharedVertexBuffer(lightData, cubeObjectData);
-	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	RenderInstance lightInstance2("lightVertex", "lightFragment");
+	lightInstance2.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 
-
-	//Floor
-	vertex_data floor_data = load_vertex_data("floorVertices.csv");
-	std::vector<float> floorVertices = floor_data.first;
-	std::vector<unsigned int> floorIndices = floor_data.second;
+	RenderInstance floor("vertex", "fragment");
+	floor.readData("floorVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
 	
-	/*
-	unsigned int floor_vao;
-	glc(glGenVertexArrays(1, &floor_vao));
-	glc(glBindVertexArray(floor_vao));
+	Shader& lightShader1 = lightInstance1.getShader();
+	Shader& lightShader2 = lightInstance2.getShader();
 
-	unsigned int floor_vbo;
-	glc(glGenBuffers(1, &floor_vbo));
-	glc(glBindBuffer(GL_ARRAY_BUFFER, floor_vbo));
-	glc(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * floorVertices.size(), floorVertices.data(), GL_STATIC_DRAW));
-
-	unsigned int floor_ebo;
-	glc(glGenBuffers(1, &floor_ebo));
-	glc(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_ebo));
-	glc(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * floorIndices.size(), floorIndices.data(), GL_STATIC_DRAW));
-
-	glc(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0));
-	glc(glEnableVertexAttribArray(0));
-	glc(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))));
-	glc(glEnableVertexAttribArray(1));
-	glc(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))));
-	glc(glEnableVertexAttribArray(2));
-
-	*/
-
-	objId floorData = resourceManager->registerObject();
-	resourceManager->mapVertexArray(floorData);
-	resourceManager->mapVertexBuffer(floorData, floorVertices.data(), floorVertices.size());
-	resourceManager->mapElementBuffer(floorData, floorIndices.data(), floorIndices.size());
-	resourceManager->expressVertexLayout(Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
-
-
-	//Shader
-	
-	Shader cubeShader = Shader::parse("vertex", "fragment");
-	cubeShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
-
-	Shader lightShader1 = Shader::parse("lightVertex", "lightFragment");
 	lightShader1.set_mvpn("model_mat", "view_mat", "project_mat", "");
-
-	Shader lightShader2 = Shader::parse("lightVertex", "lightFragment");
 	lightShader2.set_mvpn("model_mat", "view_mat", "project_mat", "");
 
-	Shader floorShader = Shader::parse("vertex", "fragment");
-	floorShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
-	
+	Shader& cubeShader = cube.getShader();
+	Shader& floorShader = floor.getShader();
 
 	//MVP for object
 	glm::mat4 model = glm::mat4(1.0f);
@@ -180,7 +132,6 @@ void mainLoop() {
 
 	glm::mat4 modelLight = glm::mat4(1.0f);
 
-	cubeShader.attach();
 	floorShader.attach();
 	modelLight = glm::mat4(1.0f);
 	modelLight = glm::translate(modelLight, lights[0].position);
@@ -193,13 +144,12 @@ void mainLoop() {
 		light.shaderObj->model(modelLight, false);
 	}
 
-	cubeShader.attach();
-	Texture container = Texture::from_image("container2.png", cubeShader, "material.diffuse", 0);
-	Texture container_specular = Texture::from_image("container2_specular.png", cubeShader, "material.specular", 1);
+	cube.loadTexture("container2.png", "material.diffuse");
+	cube.loadTexture("container2_specular.png", "material.specular");
 
 	floorShader.attach();
-	Texture floor_diffuse = Texture::from_image("container2.png", floorShader, "material.diffuse", 0);
-	Texture floor_specular = Texture::from_image("container2_specular.png", floorShader, "material.specular", 1);
+	Texture floor_diffuse = Texture::from_image("container2.png", floorShader, "material.diffuse");
+	Texture floor_specular = Texture::from_image("container2_specular.png", floorShader, "material.specular");
 
 
 	size_t n_Cubes = 20;
@@ -226,7 +176,7 @@ void mainLoop() {
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glc(glEnable(GL_DEPTH_TEST));
 	glc(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-
+	
 
 	float lastFrameTime = 0.0f;
 	float deltaTime = 0.0f;
@@ -253,8 +203,6 @@ void mainLoop() {
 		//Update and draw object
 		
 		cubeShader.attach();
-		container.activate()->bind();
-		container_specular.activate()->bind();
 		cubeShader.view(view);
 		cubeShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
 
@@ -263,36 +211,31 @@ void mainLoop() {
 			mod = glm::translate(mod, cubePositions[i]);
 			mod = glm::rotate(mod, cubeRotations[i], cubeAxisOfRotations[i]);
 			cubeShader.model(mod, true);
-			glc(glBindVertexArray(resourceManager->getVertexArray(cubeObjectData)));
-			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
-			glc(glBindTexture(GL_TEXTURE_2D, 0));
+			cube.render();
 		}
 		
 		
 		floorShader.attach();
-		floor_diffuse.activate()->bind();
-		floor_specular.activate()->bind();
 		floorShader.view(view);
 		floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
-
-		
-		glc(glBindVertexArray(resourceManager->getVertexArray(floorData)));
-		glc(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-		glc(glBindTexture(GL_TEXTURE_2D, 0));
+		floor.render();
 
 		//Draw lights
-		for (const Light& light : lights) {
-			light.shaderObj->attach();
-			light.shaderObj->view(view);
-			modelLight = glm::mat4(1.0f);
-			modelLight = glm::translate(modelLight, light.position);
-			modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-			light.shaderObj->model(modelLight, false);
+		lightShader1.attach();
+		lightShader1.view(view);
+		modelLight = glm::mat4(1.0f);
+		modelLight = glm::translate(modelLight, lights[0].position);
+		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
+		lightShader1.model(modelLight, false);
+		lightInstance1.render();
 
-			glc(glBindVertexArray(resourceManager->getVertexArray(lightData)));
-			glc(glDrawArrays(GL_TRIANGLES, 0, 36));
-		}
-		
+		lightShader2.attach();
+		lightShader2.view(view);
+		modelLight = glm::mat4(1.0f);
+		modelLight = glm::translate(modelLight, lights[1].position);
+		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
+		lightShader2.model(modelLight, false);
+		lightInstance2.render();
 		
 		//Unbind
 		glc(glBindVertexArray(0));

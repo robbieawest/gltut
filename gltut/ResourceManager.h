@@ -59,22 +59,11 @@ namespace Resource {
 		std::unordered_map<objId, GLuint> vertexArrayMappings;
 		std::unordered_map<objId, GLuint> vertexBufferMappings;
 		std::unordered_map<objId, GLuint> elementBufferMappings;
-		std::unordered_map<objId, Shader*> shaderProgramMappings;
-		std::unordered_map<objId, std::vector<Texture*>> textureMappings;
 		
 		ResourceManager() {
 		}
 
 		~ResourceManager() {
-			//Clean up
-			for (std::pair<objId, Shader*> pair : shaderProgramMappings) {
-				delete pair.second;
-			}
-			for (std::pair<objId, std::vector<Texture*>> pair : textureMappings) {
-				for (Texture* texture : pair.second) {
-					delete texture;
-				}
-			}
 			delete instance;
 		}
 
@@ -257,62 +246,6 @@ namespace Resource {
 
 			return vElementMap->second;
 		}
-
-		void mapShader(objId _id, Shader* shaderProgram) {
-			validateId(_id);
-			shaderProgramMappings.insert(std::make_pair(_id, shaderProgram));
-		}
-
-		Shader* getShader(objId _id) {
-			if (!validateId(_id)) return nullptr;
-
-			auto vShaderMap = shaderProgramMappings.find(_id);
-			if (vShaderMap == shaderProgramMappings.end()) {
-				spdlog::error("getShaderProgram: _id {} contains no shader program mappings.", _id);
-				return nullptr;
-			}
-
-			return vShaderMap->second;
-		}
-
-		void mapTexture(objId _id, Texture* texture) {
-			validateId(_id);
-
-			auto tMap = textureMappings.find(_id);
-			if (tMap == textureMappings.end()) {
-				//Create texture vector
-				std::vector<Texture*> textures;
-				textures.reserve(MAX_TEXTURES);
-				textures.push_back(texture);
-
-				textureMappings.insert(std::make_pair(_id, textures));
-				return;
-			}
-			
-			//Texture vector exists
-			std::vector<Texture*>& textures = tMap->second;
-			if (textures.size() < MAX_TEXTURES)
-				textures.push_back(texture);
-			else
-				spdlog::warn("mapTexture: Texture mapping limit has been reached for _id: {}, attempt dismissed.", _id);
-		}
-
-		std::vector<Texture*>* getTextures(objId _id) {
-			if (!validateId(_id)) return nullptr;
-
-			auto tMap = textureMappings.find(_id);
-			if (tMap == textureMappings.end()) {
-				spdlog::error("getTexture: _id {} contains no texture mappings.", _id);
-				return nullptr;
-			}
-
-			return &tMap->second;
-		}
-
-
-
-		// -------DRAWING AND RENDERING-------
-		
 
 	};
 }

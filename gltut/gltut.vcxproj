@@ -140,7 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ObjectManager.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -149,7 +149,8 @@
     <ClInclude Include="helper.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="mouse.h" />
-    <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="RenderInstance.h" />
     <ClInclude Include="Resources\Shaders\spherefragment.glsl" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="sphere.h" />
