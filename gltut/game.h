@@ -35,6 +35,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void mainLoop() {
 	assert_cond(window, "window setup check");
+
+	/*
+	TODO:
+	Shader is to be decoupled from RenderInstance
+	RenderInstance methods to share gpu memory should be implemented
+	Light class needs a fucking rework (hold a RenderInstance, get rid of the stupid static functionality)
+	Implement texture parameter storage in RenderInstances, apply them on render().
+	*/
 	
 	//New
 	RenderInstance cube("vertex", "fragment");
