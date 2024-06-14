@@ -10,19 +10,11 @@ private:
 	bool init = false, ebuf = false;
 	objId resourceId;
 	unsigned int numElements = -1;
-	Shader shader;
 	std::vector<Texture> textures = std::vector<Texture>();
 	Resource::ResourceManager* resourceManagerInstance;
 
 public:
-	RenderInstance(Shader shader) : shader(shader){
-		resourceManagerInstance = Resource::ResourceManager::getInstance();
-		resourceId = resourceManagerInstance->registerObject();
-	}
-
-	RenderInstance(std::string vertexPath, std::string fragmentPath){
-		shader = Shader::parse(vertexPath, fragmentPath);
-		shader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
+	RenderInstance() {
 		resourceManagerInstance = Resource::ResourceManager::getInstance();
 		resourceId = resourceManagerInstance->registerObject();
 	}
@@ -31,7 +23,7 @@ public:
 		textures.push_back(texture);
 	}
 
-	void loadTexture(std::string path, std::string uniform) {
+	void loadTexture(std::string path, std::string uniform, Shader& shader) {
 		Texture newTexture = Texture::from_image(path, shader, uniform);
 		textures.push_back(newTexture);
 	}
@@ -63,17 +55,14 @@ public:
 		init = true;
 	}
 
-	Shader& getShader() {
-		return shader;
-	}
 
 	void render() {
+		//A shader must be attached upon call
 		if (!init) {
 			spdlog::warn("Render Instance not initialized on render() call, ignoring.");
 			return;
 		}
 
-		shader.attach();
 		for (Texture& texture : textures) {
 			texture.activate()->bind();
 		}

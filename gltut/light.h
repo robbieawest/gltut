@@ -2,15 +2,19 @@
 #include "glm/glm.hpp"
 #include "shader.h"
 #include "GLError.h"
+#include "RenderInstance.h"
+#include "ResourceManager.h"
 
 class Light {
-public:
+private:
 	glm::vec3 position, ambient, specular, diffuse;
 	float constant, linear, quadratic;
 	glm::vec3(*updateFunction) (float);
 	Shader* shaderObj;
+	RenderInstance renderInstance;
+public:
 
-	Light(glm::vec3 p, glm::vec3 a, glm::vec3 s, glm::vec3 d, float c, float l, float q, Shader* sh, glm::vec3(*f)(float))
+	Light(glm::vec3 p, glm::vec3 a, glm::vec3 s, glm::vec3 d, float c, float l, float q, Shader* sh, glm::vec3(*f)(float), std::string data_path, Resource::VertexBufferLayout layout)
 		: position(p)
 		, ambient(a)
 		, specular(s)
@@ -19,8 +23,13 @@ public:
 		, linear(l)
 		, quadratic(q)
 		, shaderObj(sh)
-		, updateFunction(f)
-		{}
+		, updateFunction(f) {
+		renderInstance.readData(data_path, layout);
+	}
+
+	Shader* getShader() {
+		return shaderObj;
+	}
 
 	void updatePosition(float time) {
 		position = updateFunction(time);
@@ -31,10 +40,6 @@ public:
 		shaderObj->uniform3f("light.ambient", ambient.x, ambient.y, ambient.z);
 		shaderObj->uniform3f("light.diffuse", diffuse.x, diffuse.y, diffuse.z);
 		shaderObj->uniform3f("light.specular", specular.x, specular.y, specular.z);
-	}
-
-	static void updateLightFragmentUniforms(std::vector<Light>& lights) {
-		for (Light& light : lights)light.updateFragmentUniforms();
 	}
 
 	static void updateShader(Shader& shaderProgram, std::vector<Light> lights) {
@@ -53,14 +58,21 @@ public:
 		}
 	}
 
-	static void updateLightsPositions(std::vector<Light>& lights, float time) {
-		for (Light& light : lights)light.updatePosition(time);
-	}
-
 	static void updateShaderOnlyPositions(Shader& shaderProgram, std::vector<Light>& lights) {
 		shaderProgram.attach();
 		for (size_t i = 0; i < lights.size(); i++) {
 			shaderProgram.uniform3f(format_g("lights[{}].position", i), lights[i].position.x, lights[i].position.y, lights[i].position.z);
 		}
+	}
+
+	void render(glm::mat4 view) {
+		shaderObj->attach();
+		shaderObj->view(view);
+
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, position);
+		model = glm::scale(model, glm::vec3(0.2f));
+		shaderObj->model(model, false);
+		renderInstance.render();
 	}
 };

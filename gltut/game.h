@@ -45,33 +45,32 @@ void mainLoop() {
 	*/
 	
 	//New
-	RenderInstance cube("vertex", "fragment");
+	RenderInstance cube;
 	cube.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	Shader cubeShader = Shader::parse("vertex", "fragment");
+	cubeShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 	
-	RenderInstance lightInstance1("lightVertex", "lightFragment");
+	RenderInstance lightInstance1;
 	lightInstance1.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
-
-	RenderInstance lightInstance2("lightVertex", "lightFragment");
-	lightInstance2.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
-
-	RenderInstance floor("vertex", "fragment");
-	floor.readData("floorVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
-	
-	Shader& lightShader1 = lightInstance1.getShader();
-	Shader& lightShader2 = lightInstance2.getShader();
-
+	Shader lightShader1 = Shader::parse("lightVertex", "lightFragment");
 	lightShader1.set_mvpn("model_mat", "view_mat", "project_mat", "");
+
+	RenderInstance lightInstance2;
+	lightInstance2.readData("cubeVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	Shader lightShader2 = Shader::parse("lightVertex", "lightFragment");
 	lightShader2.set_mvpn("model_mat", "view_mat", "project_mat", "");
 
-	Shader& cubeShader = cube.getShader();
-	Shader& floorShader = floor.getShader();
+	RenderInstance floor;
+	floor.readData("floorVertices.csv", Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2}));
+	Shader floorShader = Shader::parse("vertex", "fragment");
+	floorShader.set_mvpn("model_mat", "view_mat", "project_mat", "normal_mat");
 
 	//MVP for object
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-	
+
 	cubeShader.attach();
 	cubeShader.model(model, true);
 	cubeShader.view(view);
@@ -98,6 +97,7 @@ void mainLoop() {
 	//Lights
 	std::vector<Light> lights = {
 		{
+
 			glm::vec3(1.2f, 1.0f, 1.0f),
 			glm::vec3(0.2f, 0.2f, 0.2f),
 			glm::vec3(0.5f, 0.5f, 0.5f),
@@ -112,7 +112,9 @@ void mainLoop() {
 					glm::abs(5.0f * cos(glfwGetTime() / 3.0f)),
 					3.0f * sin(glfwGetTime())
 				);
-			}
+			},
+			"cubeVertices.csv",
+			Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2})
 		},
 
 		{
@@ -130,35 +132,30 @@ void mainLoop() {
 					glm::abs(5.0f * cos(glfwGetTime() / 8.0f)),
 					3.0f * sin(glfwGetTime() * 2.0f)
 				);
-			}
+			},
+			"cubeVertices.csv",
+			Resource::VertexBufferLayout(std::vector<unsigned int>{3, 3, 2})
 		}
 	};
 
 	Light::updateShader(cubeShader, lights);
 	Light::updateShader(floorShader, lights);
-	Light::updateLightFragmentUniforms(lights);
 
 	glm::mat4 modelLight = glm::mat4(1.0f);
-
-	floorShader.attach();
-	modelLight = glm::mat4(1.0f);
-	modelLight = glm::translate(modelLight, lights[0].position);
-	modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-	
 	for (Light& light : lights) {
-		light.shaderObj->attach();
-		light.shaderObj->view(view);
-		light.shaderObj->project(projection);
-		light.shaderObj->model(modelLight, false);
+		light.updateFragmentUniforms();
+		Shader* sh = light.getShader();
+		sh->attach();
+		sh->view(view);
+		sh->project(projection);
+		sh->model(modelLight, false);
 	}
 
-	cube.loadTexture("container2.png", "material.diffuse");
-	cube.loadTexture("container2_specular.png", "material.specular");
+	cube.loadTexture("container2.png", "material.diffuse", cubeShader);
+	cube.loadTexture("container2_specular.png", "material.specular", cubeShader);
 
-	floorShader.attach();
-	Texture floor_diffuse = Texture::from_image("container2.png", floorShader, "material.diffuse");
-	Texture floor_specular = Texture::from_image("container2_specular.png", floorShader, "material.specular");
-
+	floor.loadTexture("container2.png", "material.diffuse", floorShader);
+	floor.loadTexture("container2_specular.png", "material.specular", floorShader);
 
 	size_t n_Cubes = 20;
 	std::vector<glm::vec3> cubePositions(n_Cubes, glm::vec3(0.0f));
@@ -194,26 +191,23 @@ void mainLoop() {
 		float currentTime = glfwGetTime();
 		deltaTime = currentTime - lastFrameTime;
 		lastFrameTime = currentTime;
-
 		cam.handle_movement(deltaTime);
 
-		//rendering
 		glc(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		glc(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-		//Update light position
-		Light::updateLightsPositions(lights, currentTime);
-		Light::updateShaderOnlyPositions(cubeShader, lights);
-		Light::updateShaderOnlyPositions(floorShader, lights);
-
 		view = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
 		
-		//Update and draw object
+		//Draw lights
+		for (Light& light : lights) {
+			light.updatePosition(currentTime);
+			light.render(view);
+		}
 		
 		cubeShader.attach();
 		cubeShader.view(view);
 		cubeShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
-
+		Light::updateShaderOnlyPositions(cubeShader, lights);
 		for (size_t i = 0; i < n_Cubes; i++) {
 			glm::mat4 mod = glm::mat4(1.0f);
 			mod = glm::translate(mod, cubePositions[i]);
@@ -221,29 +215,12 @@ void mainLoop() {
 			cubeShader.model(mod, true);
 			cube.render();
 		}
-		
-		
+	
 		floorShader.attach();
 		floorShader.view(view);
 		floorShader.uniform3f("viewPos", cam.pos.x, cam.pos.y, cam.pos.z);
+		Light::updateShaderOnlyPositions(floorShader, lights);
 		floor.render();
-
-		//Draw lights
-		lightShader1.attach();
-		lightShader1.view(view);
-		modelLight = glm::mat4(1.0f);
-		modelLight = glm::translate(modelLight, lights[0].position);
-		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-		lightShader1.model(modelLight, false);
-		lightInstance1.render();
-
-		lightShader2.attach();
-		lightShader2.view(view);
-		modelLight = glm::mat4(1.0f);
-		modelLight = glm::translate(modelLight, lights[1].position);
-		modelLight = glm::scale(modelLight, glm::vec3(0.2f));
-		lightShader2.model(modelLight, false);
-		lightInstance2.render();
 		
 		//Unbind
 		glc(glBindVertexArray(0));
